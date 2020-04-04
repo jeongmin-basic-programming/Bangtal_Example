@@ -5,12 +5,13 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <queue>
+#include <utility>
 
 using namespace std;
 
 int puzzle[4][4];
 ObjectID puzzleObject[4][4];
+
 SceneID scene;
 
 int rows = 4;
@@ -19,18 +20,18 @@ int cols = 4;
 int dx[] = { -1,1,0,0 };
 int dy[] = { 0,0,-1,1, };
 
-pair<int, int> corner;
-const int pieceSize = 150;
+pair<int, int> corner; // 퍼즐 조각 시작지점
+const int pieceSize = 150; // 퍼즐 조각 크기
 
-pair<int,int> cur;
-pair<int, int> coord[4][4];
+pair<int,int> cur; // 공백칸의 위치
+pair<int, int> coord[4][4]; //각 퍼즐 조각들의 좌표값
 
 bool checkClear(void);
 void shuffleBoard(int n);
 int randomDirection(void);
 void initializeBoard(int x, int y);
-void printPuzzle(bool hideEmpty);
-bool  checkValidMove(int i);
+void showPuzzle(bool hideEmpty);
+bool checkValidMove(int i);
 void movePiece(int i);
 
 
@@ -48,7 +49,7 @@ int main(void)
 
 	corner = make_pair(296, 504);
 	initializeBoard(3, 3);
-	printPuzzle(false);
+	showPuzzle(false);
 
 
 	startButton = createObject("시작버튼", "Images\\start.png");
@@ -98,7 +99,13 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 						}
 					}
 					if (checkClear())
-						endGame();
+					{
+						showObject(puzzleObject[cur.first][cur.second]);
+						//게임 성공
+						setObjectImage(startButton, "Images\\restart.png");
+						showObject(startButton);
+
+					}
 					if (targetFound == true)
 						return;
 				}
@@ -134,7 +141,7 @@ bool checkClear(void) {
 	return true;
 }
 
-void printPuzzle(bool hideEmpty) {
+void showPuzzle(bool hideEmpty) {
 	for (int i = 0; i < rows; i++)
 	{
 		for (int j = 0; j < cols; j++)
@@ -207,7 +214,6 @@ int randomDirection(void) {
 
 	return rand()%4;
 }
-
 void shuffleBoard(int n)
 {
 	int move = 0,cnt=0;
