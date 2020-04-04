@@ -57,27 +57,11 @@ int main(void)
 
 	startGame(scene);
 
-	//TODO : 클릭 처리
-	//while (!checkClear()) {
-	//	int inputVal = 0;
-	//	bool valid = false;
-	//	cout << "상, 하, 좌, 우" << endl;
-	//	cin >> inputVal; // 1~4
-	//	valid = checkValidMove(inputVal);
-	//	if (!valid)
-	//	{
-	//		cout << "invalid move!" << endl;
-	//		continue;
-
-	//	}
-	//	movePiece(inputVal);
-	//}
-
 	return 0;
 }
 
 void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
-
+	bool targetFound = false;
 
 	if (object == startButton)
 	{
@@ -86,29 +70,42 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 		shuffleBoard(50);
 
 	}
-
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < cols; j++)
+	else {
+		for (int x = 0;x < rows; x++)
 		{
-			if (object == puzzleObject[j][i])
+			for (int y = 0; y < cols; y++)
 			{
-				//move valid 
-				//move 
+				if (object == puzzleObject[x][y])
+				{
+					targetFound = true;
 
+					int nx = 0, ny = 0;
+					for (int i = 0; i < 4; i++)
+					{
 
-				if (checkClear())
-					endGame();
+						nx = dx[i] + x;
+						ny = dy[i] + y;
+						if (nx == cur.first&& ny == cur.second)
+						{
+							if (i == 0)//상
+								movePiece(1);
+							else if (i == 1)//하
+								movePiece(0);
+							else if (i == 2) // 좌
+								movePiece(3);
+							else if (i == 3)//우
+								movePiece(2);
+						}
+					}
+					if (checkClear())
+						endGame();
+					if (targetFound == true)
+						return;
+				}
 			}
-
 		}
-			
-
-
 	}
-
 }
-
 
 void initializeBoard(int x, int y) {
 	int val = 0;
