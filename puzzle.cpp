@@ -14,8 +14,14 @@ ObjectID puzzleObject[4][4];
 
 SceneID scene;
 
+TimerID timer1;
+
 int rows = 4;
 int cols = 4;
+
+int shuffleTimes = 100; //섞을 때 움직일 횟수
+
+int minute = 0; // 소요분
 
 int dx[] = { -1,1,0,0 };
 int dy[] = { 0,0,-1,1, };
@@ -26,7 +32,9 @@ const int pieceSize = 150; // 퍼즐 조각 크기
 pair<int,int> cur; // 공백칸의 위치
 pair<int, int> coord[4][4]; //각 퍼즐 조각들의 좌표값
 
-bool checkClear(void);
+bool gameStarted = false;
+
+bool checkClear(void); 
 void shuffleBoard(int n);
 int randomDirection(void);
 void initializeBoard(int x, int y);
@@ -34,16 +42,15 @@ void showPuzzle(bool hideEmpty);
 bool checkValidMove(int i);
 void movePiece(int i);
 
-
+void timerCallback(TimerID timer);
 void mouseCallback(ObjectID object, int x, int y, MouseAction action);
 
 ObjectID startButton;
 
 int main(void)
 {
-
+	setTimerCallback(timerCallback);
 	setMouseCallback(mouseCallback);
-
 
 	scene = createScene("개굴맨", "Images\\back.png");
 
@@ -51,14 +58,26 @@ int main(void)
 	initializeBoard(3, 3);
 	showPuzzle(false);
 
-
 	startButton = createObject("시작버튼", "Images\\start.png");
 	locateObject(startButton, scene, 590, 350);
 	showObject(startButton);
 
+	timer1 = createTimer(60.0f);
+	
 	startGame(scene);
 
 	return 0;
+}
+
+void timerCallback(TimerID timer)
+{
+	if (timer == timer1)
+	{
+		minute++;
+		setTimer(timer, 60.0f);
+		startTimer(timer);
+	}
+	
 }
 
 void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
@@ -66,12 +85,15 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 
 	if (object == startButton)
 	{
+		minute = 0;
 		hideObject(startButton);
 		hideObject(puzzleObject[cur.first][cur.second]);
-		shuffleBoard(50);
-
+		shuffleBoard(shuffleTimes);
+		setTimer(timer1, 60.0f);
+		startTimer(timer1);
+		gameStarted = true;
 	}
-	else {
+	else if (gameStarted){
 		for (int x = 0;x < rows; x++)
 		{
 			for (int y = 0; y < cols; y++)
@@ -100,10 +122,15 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 					}
 					if (checkClear())
 					{
+						char buf[16];
 						showObject(puzzleObject[cur.first][cur.second]);
 						//게임 성공
 						setObjectImage(startButton, "Images\\restart.png");
 						showObject(startButton);
+
+						sprintf(buf, "%d분 %d초 소요",minute,int(60.0-getTimer(timer1)));
+						stopTimer(timer1);
+						showMessage(buf);
 
 					}
 					if (targetFound == true)
@@ -211,7 +238,6 @@ bool checkValidMove(int i)
 	return valid;
 }
 int randomDirection(void) {
-
 	return rand()%4;
 }
 void shuffleBoard(int n)
@@ -222,9 +248,9 @@ void shuffleBoard(int n)
 		move = randomDirection();
 		if (!checkValidMove(move))
 			continue;
-		
 		movePiece(move);
 		cnt++;
 	} while (cnt < n);
-
+	if (checkClear()) // 혹시라도 섞은 결과가 정답일때
+		shuffleBoard(1);// 한칸만 더 움직인다.
 }
